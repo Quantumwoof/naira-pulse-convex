@@ -1,10 +1,10 @@
 # Naira Pulse · Convex
 
-> Nigeria remittance / everyday-money pulse — live FX snapshot + short AI tip, reactive on **Convex**, with **Firecrawl** scrape path (DEMO fixtures by default).
+> Nigeria remittance / everyday-money pulse — indicative FX snapshot + short tip, reactive on **Convex**, with a **Firecrawl** scrape path (**DEMO fixtures by default**).
 
 Built for the [Convex Modern Stack Hackathon](https://www.convex.dev/hackathons/modernstack) by **Joshua Jubelo** ([Quantumwoof](https://github.com/Quantumwoof)) — indie builder, Nigeria. Contact: caughtsight007@gmail.com
 
-**Repo created:** 2026-09-24 · **License:** MIT
+**Repo created:** 2026-09-24 (after Sep 16 start) · **License:** MIT · **Deadline:** Oct 1, 2026 12 PM PT
 
 ---
 
@@ -13,11 +13,34 @@ Built for the [Convex Modern Stack Hackathon](https://www.convex.dev/hackathons/
 | Requirement | Status |
 |-------------|--------|
 | **Convex** backend (tables + queries/mutations + actions) | ✅ `convex/schema.ts`, `pulses.ts`, `actions.ts` |
-| **≥1 sponsor partner** — **Firecrawl** | ✅ `actions.refreshRates` calls Firecrawl `/v1/scrape` when `DEMO_MODE=0` + `FIRECRAWL_API_KEY`; otherwise DEMO fixtures (`convex/fixtures.ts`) |
+| **≥1 sponsor partner** — **Firecrawl** (primary) | ✅ `actions.refreshRates` → Firecrawl `/v1/scrape` when `DEMO_MODE=0` + `FIRECRAWL_API_KEY`; else DEMO fixtures (`convex/fixtures.ts`) |
 | Secondary — **OpenAI** tip (optional) | ✅ same action; canned tips if no `OPENAI_API_KEY` |
-| New app after Sep 16 2026 | ✅ |
-| Public GitHub + runnable MVP | ✅ |
-| vibeapps.dev tag | Submit live URL with tag **`modernstack`** (see DEPLOY.md) |
+| New app on/after Sep 16 2026 | ✅ created 2026-09-24 |
+| Public GitHub + runnable MVP | ✅ this repo; `npm run smoke` / `npm run build` |
+| vibeapps.dev tag | Submit **public HTTPS** URL with tag **`modernstack`** (see [DEPLOY.md](./DEPLOY.md)) |
+
+---
+
+## Architecture (short)
+
+```
+Browser (Next.js) ──useQuery / useAction──► Convex
+                                              │
+                         refreshRates (Node action)
+                              │
+              ┌───────────────┴───────────────┐
+              │ DEMO_MODE=1 (default)         │ DEMO_MODE=0 + FIRECRAWL_API_KEY
+              ▼                               ▼
+         fixtures.ts                    Firecrawl /v1/scrape
+         + canned tip                   + parseRates.ts
+              │                               │
+              └──────── insertPulse ──────────┘
+                    (internalMutation)
+                         │
+                    pulses table  ──► reactive UI cards
+```
+
+Without `NEXT_PUBLIC_CONVEX_URL`, the UI runs a **local DEMO preview** (same fixtures, in-browser only) so judges can click Refresh with zero keys.
 
 ---
 
@@ -25,10 +48,12 @@ Built for the [Convex Modern Stack Hackathon](https://www.convex.dev/hackathons/
 
 1. **Refresh rates** triggers a Convex **action**.
 2. Action either:
-   - **DEMO_MODE (default):** loads LLM-ready markdown fixtures (Firecrawl-shaped) and stores snapshots, or
+   - **DEMO_MODE (default):** loads Firecrawl-shaped markdown fixtures and stores snapshots, **honestly labeled DEMO**, or
    - **Live:** scrapes a public FX page via **Firecrawl**, parses USD/GBP/EUR → NGN rates.
 3. Snapshots land in the Convex `pulses` table; the UI **reactively** shows latest cards + recent history.
 4. A short remittance tip is attached (OpenAI or canned DEMO tip).
+
+Rates are **indicative only** — not advice, not a live trading feed.
 
 ---
 
@@ -39,12 +64,13 @@ git clone https://github.com/Quantumwoof/naira-pulse-convex.git
 cd naira-pulse-convex
 npm install
 cp .env.example .env.local   # DEMO_MODE=1 by default
+npm run smoke                # offline checks
 npm run dev
 ```
 
 Open http://localhost:3000
 
-- **Without** `NEXT_PUBLIC_CONVEX_URL`: local DEMO preview UI (fixtures, Refresh works in-browser).
+- **Without** `NEXT_PUBLIC_CONVEX_URL`: local DEMO preview UI (fixtures; Refresh works in-browser).
 - **With** Convex (recommended for the full stack):
 
 ```bash
@@ -67,8 +93,9 @@ npx convex env set DEMO_MODE 1
 | Script | Purpose |
 |--------|---------|
 | `npm run dev` | Next.js frontend |
-| `npm run smoke` | Offline fixture/parser checks |
+| `npm run smoke` | Offline fixture / parser / schema checks |
 | `npm run build` | Production Next.js build |
+| `npm run lint` | ESLint |
 | `npx convex dev` | Sync Convex functions + generate types |
 
 ---
@@ -77,20 +104,23 @@ npx convex env set DEMO_MODE 1
 
 ```
 convex/
-  schema.ts      # pulses table
-  pulses.ts      # latest / recent / insertPulse
-  actions.ts     # refreshRates (Firecrawl + OpenAI / DEMO)
-  fixtures.ts    # offline scrape + tip fixtures
+  schema.ts       # pulses table + indexes
+  pulses.ts       # latest / recent (public) + insertPulse (internal)
+  actions.ts      # refreshRates (Firecrawl + OpenAI / DEMO)
+  fixtures.ts     # offline scrape + tip fixtures
+  parseRates.ts   # shared markdown → rate parser
 src/
-  app/           # Next.js App Router
-  components/    # PulseDashboard + ConvexProvider
+  app/            # Next.js App Router
+  components/     # PulseDashboard + ConvexProvider
+  lib/format.ts   # ₦ + Africa/Lagos time helpers
+scripts/smoke.mjs
 ```
 
 ---
 
 ## Environment
 
-See `.env.example`. **Never commit secrets.**
+See [`.env.example`](./.env.example). **Never commit secrets.**
 
 | Variable | Where | Notes |
 |----------|--------|-------|
@@ -99,21 +129,21 @@ See `.env.example`. **Never commit secrets.**
 | `OPENAI_API_KEY` | Convex env | Optional tips |
 | `NEXT_PUBLIC_CONVEX_URL` | `.env.local` / Vercel | From `convex dev` / deploy |
 
-Firecrawl free signup: https://www.firecrawl.dev — hackathon code **MODERNSTACK** may grant credits. The DEMO path needs no card.
+Firecrawl free signup: https://www.firecrawl.dev — hackathon code **MODERNSTACK** may grant credits (docs say ~20k). The DEMO path needs **no card**.
 
 ---
 
 ## Deploy & submit
 
-See **[DEPLOY.md](./DEPLOY.md)** for Convex + Vercel steps and vibeapps.dev **`modernstack`** submission notes.
+See **[DEPLOY.md](./DEPLOY.md)** for Convex + Vercel steps, Luma registration, video demo, and vibeapps.dev **`modernstack`** submission.
 
-Deadline reminder: **Oct 1, 2026 12 PM PT**.
+Deadline: **October 1, 2026 12 PM PT**.
 
 ---
 
 ## Stack
 
 - Next.js 16 (App Router) + TypeScript + Tailwind CSS v4
-- Convex (database, queries, mutations, Node actions)
+- Convex (database, queries, internal mutations, Node actions)
 - Firecrawl (scrape → markdown) / DEMO fixtures
 - OpenAI (optional short tip) / canned tips

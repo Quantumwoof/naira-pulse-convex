@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 
 /** Latest snapshot per pair (most recent overall first). */
 export const latest = query({
@@ -27,7 +27,7 @@ export const latest = query({
 export const recent = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const limit = Math.min(args.limit ?? 20, 50);
+    const limit = Math.min(Math.max(args.limit ?? 20, 1), 50);
     return await ctx.db
       .query("pulses")
       .withIndex("by_capturedAt")
@@ -36,8 +36,11 @@ export const recent = query({
   },
 });
 
-/** Internal write used by refresh action. */
-export const insertPulse = mutation({
+/**
+ * Internal write used only by refreshRates action.
+ * Not exposed to clients — prevents arbitrary pulse injection.
+ */
+export const insertPulse = internalMutation({
   args: {
     pair: v.string(),
     rate: v.number(),
@@ -51,6 +54,15 @@ export const insertPulse = mutation({
     capturedAt: v.number(),
   },
   handler: async (ctx, args) => {
+    if (!Number.isFinite(args.rate) || args.rate <= 0) {
+      throw new Error(`Invalid rate for ${args.pair}: ${args.rate}`);
+    }
+    if (!args.pair.trim()) {
+      throw new Error("pair is required");
+    }
+    if (!Number.isFinite(args.capturedAt) || args.capturedAt <= 0) {
+      throw new Error("capturedAt must be a positive unix ms timestamp");
+    }
     return await ctx.db.insert("pulses", args);
   },
 });

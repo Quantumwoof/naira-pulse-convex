@@ -2,8 +2,9 @@
 
 import { v } from "convex/values";
 import { action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { DEMO_FX_FIXTURES, pickDemoTip, type FixtureRate } from "./fixtures";
+import { parseRatesFromMarkdown } from "./parseRates";
 
 const FIRECRAWL_URL = "https://api.firecrawl.dev/v1/scrape";
 const DEFAULT_SOURCE =
@@ -15,47 +16,6 @@ function isDemoMode(): boolean {
   // Default ON so judges run without keys
   if (!process.env.FIRECRAWL_API_KEY) return true;
   return flag === "1" || flag === "true" || flag === undefined || flag === "";
-}
-
-function parseRatesFromMarkdown(markdown: string, sourceUrl: string): FixtureRate[] {
-  const pairs: FixtureRate[] = [];
-  const patterns: Array<{ pair: string; re: RegExp }> = [
-    { pair: "USD/NGN", re: /USD\s*[\/\-]\s*NGN[^\d]{0,40}([\d,]+\.?\d*)/i },
-    { pair: "GBP/NGN", re: /GBP\s*[\/\-]\s*NGN[^\d]{0,40}([\d,]+\.?\d*)/i },
-    { pair: "EUR/NGN", re: /EUR\s*[\/\-]\s*NGN[^\d]{0,40}([\d,]+\.?\d*)/i },
-  ];
-
-  for (const { pair, re } of patterns) {
-    const m = markdown.match(re);
-    if (m?.[1]) {
-      const rate = Number(m[1].replace(/,/g, ""));
-      if (Number.isFinite(rate) && rate > 0) {
-        pairs.push({
-          pair,
-          rate,
-          sourceUrl,
-          sourceLabel: "Firecrawl · live scrape",
-          scrapeExcerpt: markdown.slice(0, 1200),
-        });
-      }
-    }
-  }
-
-  // Fallback: if scrape succeeded but regex missed, keep a single USD row from mid-ish numbers
-  if (pairs.length === 0) {
-    const anyNum = markdown.match(/\b(1[0-9]{3}(?:\.\d+)?)\b/);
-    if (anyNum?.[1]) {
-      pairs.push({
-        pair: "USD/NGN",
-        rate: Number(anyNum[1]),
-        sourceUrl,
-        sourceLabel: "Firecrawl · parsed fallback",
-        scrapeExcerpt: markdown.slice(0, 1200),
-      });
-    }
-  }
-
-  return pairs;
 }
 
 async function scrapeWithFirecrawl(url: string): Promise<{
@@ -170,7 +130,7 @@ export const refreshRates = action({
     if (demo) {
       // Light jitter so each refresh feels live in DEMO_MODE
       rates = DEMO_FX_FIXTURES.map((f) => {
-        const jitter = 1 + ((Math.random() - 0.5) * 0.006);
+        const jitter = 1 + (Math.random() - 0.5) * 0.006;
         const rate = Math.round(f.rate * jitter * 100) / 100;
         return {
           ...f,
@@ -187,7 +147,7 @@ export const refreshRates = action({
       const scraped = await scrapeWithFirecrawl(sourceUrl);
       rates = parseRatesFromMarkdown(scraped.markdown, scraped.sourceUrl);
       if (rates.length === 0) {
-        // Soft fallback so UI never hard-fails
+        // Soft fallback so UI never hard-fails — still labeled as demo fallback
         rates = DEMO_FX_FIXTURES.map((f) => ({
           ...f,
           sourceLabel: "Firecrawl empty → demo fallback",
@@ -198,11 +158,14 @@ export const refreshRates = action({
       }
     }
 
-    const tip = await maybeOpenAiTip(rates, demo || !process.env.OPENAI_API_KEY);
+    const tip = await maybeOpenAiTip(
+      rates,
+      demo || !process.env.OPENAI_API_KEY,
+    );
 
     const ids: string[] = [];
     for (const r of rates) {
-      const id = await ctx.runMutation(api.pulses.insertPulse, {
+      const id = await ctx.runMutation(internal.pulses.insertPulse, {
         pair: r.pair,
         rate: r.rate,
         bid: r.bid,

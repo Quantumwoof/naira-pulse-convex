@@ -28,5 +28,24 @@
     "typescript": "^5"
   },
   "description": "Nigeria remittance / everyday-money pulse — Convex + Firecrawl Modern Stack Hackathon MVP",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Quantumwoof/naira-pulse-convex.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Quantumwoof/naira-pulse-convex/issues"
+  },
+  "homepage": "https://github.com/Quantumwoof/naira-pulse-convex#readme",
+  "keywords": [
+    "convex",
+    "firecrawl",
+    "nextjs",
+    "nigeria",
+    "remittance",
+    "hackathon",
+    "modernstack",
+    "naira"
+  ],
+  "author": "Joshua Jubelo (Quantumwoof)"
 }
