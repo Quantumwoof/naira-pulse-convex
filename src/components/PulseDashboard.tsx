@@ -4,7 +4,7 @@ import { useAction, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useMemo, useState } from "react";
 import { DEMO_FX_FIXTURES, pickDemoTip } from "../../convex/fixtures";
-import { formatNaira, formatWat } from "@/lib/format";
+import { formatNairaAmount, formatWat } from "@/lib/format";
 
 type LocalPulse = {
   _id: string;
@@ -336,16 +336,16 @@ function DashboardShell({
               </div>
               <p
                 className="mt-3 font-mono text-3xl font-bold text-emerald-400"
-                aria-label={`${p.pair} rate ${formatNaira(p.rate)} naira`}
+                aria-label={`${p.pair} rate ${formatNairaAmount(p.rate)}`}
               >
-                ₦{formatNaira(p.rate)}
+                {formatNairaAmount(p.rate)}
               </p>
               <div className="mt-3 flex gap-4 text-xs text-zinc-500">
                 {p.bid != null && (
-                  <span>Bid ₦{formatNaira(p.bid)}</span>
+                  <span>Bid {formatNairaAmount(p.bid)}</span>
                 )}
                 {p.ask != null && (
-                  <span>Ask ₦{formatNaira(p.ask)}</span>
+                  <span>Ask {formatNairaAmount(p.ask)}</span>
                 )}
               </div>
               <p className="mt-3 truncate text-xs text-zinc-500">
@@ -383,7 +383,7 @@ function DashboardShell({
                 <p className="text-sm font-medium text-zinc-100">
                   {p.pair}{" "}
                   <span className="font-mono text-emerald-400">
-                    ₦{formatNaira(p.rate)}
+                    {formatNairaAmount(p.rate)}
                   </span>
                 </p>
                 <p className="text-xs text-zinc-500">{p.sourceLabel}</p>

@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Naira Pulse · Convex",
   description:
-    "Nigeria remittance / everyday-money pulse — live FX snapshot + short AI tip. Convex + Firecrawl Modern Stack Hackathon MVP.",
+    "Nigeria remittance / everyday-money pulse — indicative FX snapshot (DEMO fixtures by default) + short tip. Convex + Firecrawl Modern Stack Hackathon MVP.",
 };
 
 export default function RootLayout({

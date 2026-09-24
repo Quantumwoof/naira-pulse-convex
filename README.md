@@ -88,6 +88,29 @@ npx convex env set DEMO_MODE 1
 
 ---
 
+
+## Judge demo (≈90 seconds)
+
+See **[docs/demo-script.md](./docs/demo-script.md)** for the full beat sheet.
+
+```bash
+npm install && cp .env.example .env.local && npm run smoke && npm run dev
+```
+
+1. Open http://localhost:3000 — amber **LOCAL DEMO** banner (no Convex URL).
+2. Click **Refresh rates** — fixtures jitter, tip rotates, history grows; labels stay `DEMO · …`.
+3. Point judges at eligibility table above (Convex + Firecrawl + `modernstack` tag).
+
+DEMO fixtures are **never** presented as live rates without labeling.
+
+## Residual blockers (this polish pass)
+
+| Blocker | Impact | Workaround |
+|---------|--------|------------|
+| No Convex login on polish machine | No live `NEXT_PUBLIC_CONVEX_URL` / deployed reactive backend | Local DEMO preview UI works offline |
+| No Firecrawl / OpenAI keys used | Live scrape + AI tip paths unexercised end-to-end | `DEMO_MODE=1` fixtures + canned tips |
+| Public HTTPS + vibeapps submit | Still need human deploy + video | Follow [DEPLOY.md](./DEPLOY.md) |
+
 ## Scripts
 
 | Script | Purpose |
@@ -97,6 +120,7 @@ npx convex env set DEMO_MODE 1
 | `npm run build` | Production Next.js build |
 | `npm run lint` | ESLint |
 | `npx convex dev` | Sync Convex functions + generate types |
+| CI (local file) | `.github/workflows/ci.yml` ready; push needs `workflow` OAuth scope — run `smoke`/`lint`/`build` locally until then |
 
 ---
 

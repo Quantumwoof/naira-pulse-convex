@@ -83,6 +83,20 @@ GBP/NGN 2124.75
 EUR/NGN 1848.20
 `;
 
+function rateFromPairLine(markdown, pair) {
+  const escaped = pair.replace("/", "[\\/\\-]");
+  const midRe = new RegExp(
+    `${escaped}[^\\n|]{0,20}\\|\\s*[\\d,]+\\.?\\d*\\s*\\|\\s*[\\d,]+\\.?\\d*\\s*\\|\\s*([\\d,]+\\.?\\d*)`,
+    "i",
+  );
+  const mid = markdown.match(midRe);
+  if (mid?.[1]) {
+    const rate = Number(mid[1].replace(/,/g, ""));
+    if (Number.isFinite(rate) && rate > 0) return rate;
+  }
+  return null;
+}
+
 function parseRatesFromMarkdown(markdown) {
   const pairs = [];
   const patterns = [
@@ -91,11 +105,15 @@ function parseRatesFromMarkdown(markdown) {
     { pair: "EUR/NGN", re: /EUR\s*[\/\-]\s*NGN[^\d]{0,40}([\d,]+\.?\d*)/i },
   ];
   for (const { pair, re } of patterns) {
-    const m = markdown.match(re);
-    if (m?.[1]) {
-      const rate = Number(m[1].replace(/,/g, ""));
-      if (Number.isFinite(rate) && rate > 0) pairs.push({ pair, rate });
+    let rate = rateFromPairLine(markdown, pair);
+    if (rate == null) {
+      const m = markdown.match(re);
+      if (m?.[1]) {
+        const n = Number(m[1].replace(/,/g, ""));
+        if (Number.isFinite(n) && n > 0) rate = n;
+      }
     }
+    if (rate != null) pairs.push({ pair, rate });
   }
   return pairs;
 }
@@ -105,6 +123,16 @@ assert(parsed.length === 3, `parser found 3 pairs (got ${parsed.length})`);
 assert(parsed[0].rate === 1585.4, "USD rate parsed (comma-stripped)");
 assert(parsed[1].rate === 2124.75, "GBP rate parsed");
 assert(parsed[2].rate === 1848.2, "EUR rate parsed");
+
+const tableMd = `| Pair | Bid | Ask | Mid |
+| USD/NGN | 1580.00 | 1590.80 | 1585.40 |
+| GBP/NGN | 2115.00 | 2134.50 | 2124.75 |
+| EUR/NGN | 1840.00 | 1856.40 | 1848.20 |`;
+const fromTable = parseRatesFromMarkdown(tableMd);
+assert(fromTable.length === 3, "table parser found 3 pairs");
+assert(fromTable[0].rate === 1585.4, "table prefers Mid over Bid for USD");
+assert(fromTable[1].rate === 2124.75, "table prefers Mid over Bid for GBP");
+assert(fromTable[2].rate === 1848.2, "table prefers Mid over Bid for EUR");
 
 const empty = parseRatesFromMarkdown("no rates here");
 assert(empty.length === 0, "parser returns empty on unmatched markdown");
@@ -143,5 +171,21 @@ assert(pkg.license === "MIT", "MIT license field");
 // Keep require referenced so older node tooling doesn't tree-shake createRequire unused
 void require;
 void pathToFileURL;
+
+
+const dashSrc = readFileSync(join(root, "src/components/PulseDashboard.tsx"), "utf8");
+assert(dashSrc.includes("LOCAL DEMO") || dashSrc.includes("DEMO_MODE"), "UI has DEMO mode badge");
+assert(dashSrc.includes("not live"), "UI copy says fixtures are not live FX");
+assert(dashSrc.includes("formatNairaAmount"), "UI uses shared ₦ formatter");
+
+const layoutSrc = readFileSync(join(root, "src/app/layout.tsx"), "utf8");
+assert(/DEMO fixtures|indicative/i.test(layoutSrc), "layout metadata honest (not claiming live-only)");
+assert(!/live FX snapshot/i.test(layoutSrc), "layout does not claim live FX snapshot");
+
+const formatSrc = readFileSync(join(root, "src/lib/format.ts"), "utf8");
+assert(formatSrc.includes("formatNairaAmount"), "formatNairaAmount helper present");
+assert(formatSrc.includes("Africa/Lagos"), "WAT timezone Africa/Lagos");
+
+assert(readme.includes("docs/demo-script.md") || readme.includes("Judge demo"), "README points judges at demo script");
 
 console.log("\nAll smoke checks passed.");

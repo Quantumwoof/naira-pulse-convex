@@ -76,3 +76,13 @@ npm run smoke    # fixture + parser + schema checks (no network)
 npm run build    # Next.js production build
 npm run lint     # ESLint
 ```
+
+## 5. CI
+
+`.github/workflows/ci.yml` is ready in the working tree (`smoke` + `lint` + `build`).
+Pushing it requires a GitHub token with the `workflow` OAuth scope (current `gh` token lacks it).
+Until then, run locally before submit:
+
+```bash
+npm run smoke && npm run lint && npm run build
+```
