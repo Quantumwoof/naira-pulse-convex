@@ -1,6 +1,9 @@
 /**
  * Shared FX markdown parser used by the Firecrawl action path
  * and offline smoke checks.
+ *
+ * Tuned for mid-market converter pages (Xe, Wise) that Firecrawl
+ * can scrape as markdown. CBN ASP pages often return empty HTML.
  */
 
 export type ParsedRate = {
@@ -11,11 +14,38 @@ export type ParsedRate = {
   scrapeExcerpt: string;
 };
 
-const PAIR_PATTERNS: Array<{ pair: string; re: RegExp }> = [
-  { pair: "USD/NGN", re: /USD\s*[\/\-]\s*NGN[^\d]{0,40}([\d,]+\.?\d*)/i },
-  { pair: "GBP/NGN", re: /GBP\s*[\/\-]\s*NGN[^\d]{0,40}([\d,]+\.?\d*)/i },
-  { pair: "EUR/NGN", re: /EUR\s*[\/\-]\s*NGN[^\d]{0,40}([\d,]+\.?\d*)/i },
-];
+const BASES = ["USD", "GBP", "EUR"] as const;
+
+function parseNumber(raw: string): number | null {
+  const n = Number(raw.replace(/,/g, ""));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  // Sanity: NGN per major should be in a plausible band
+  if (n < 100 || n > 100_000) return null;
+  return n;
+}
+
+/** Prefer Xe/Wise-style "1.00 USD =1,325.4372NGN" / "$1 USD = 1,373 NGN". */
+function rateForBase(markdown: string, base: string): number | null {
+  const patterns: RegExp[] = [
+    new RegExp(`1\\.00\\s*${base}\\s*=\\s*([\\d,]+\\.?\\d*)\\s*NGN`, "i"),
+    new RegExp(`\\$1\\s*${base}\\s*=\\s*([\\d,]+\\.?\\d*)\\s*NGN`, "i"),
+    new RegExp(`1\\s*${base}\\s*=\\s*([\\d,]+\\.?\\d*)\\s*NGN`, "i"),
+    new RegExp(`${base}\\s*[\\/\\-]\\s*NGN[^\\d]{0,40}([\\d,]+\\.?\\d*)`, "i"),
+    // Table cell: [1USD](...) | 1,325.44NGN
+    new RegExp(
+      `\\[1${base}\\][^\\n|]{0,120}\\|\\s*([\\d,]+\\.?\\d*)\\s*NGN`,
+      "i",
+    ),
+  ];
+  for (const re of patterns) {
+    const m = markdown.match(re);
+    if (m?.[1]) {
+      const rate = parseNumber(m[1]);
+      if (rate != null) return rate;
+    }
+  }
+  return null;
+}
 
 /** Prefer an explicit Mid column when Firecrawl returns a Bid|Ask|Mid table row. */
 function rateFromPairLine(markdown: string, pair: string): number | null {
@@ -26,8 +56,7 @@ function rateFromPairLine(markdown: string, pair: string): number | null {
   );
   const mid = markdown.match(midRe);
   if (mid?.[1]) {
-    const rate = Number(mid[1].replace(/,/g, ""));
-    if (Number.isFinite(rate) && rate > 0) return rate;
+    return parseNumber(mid[1]);
   }
   return null;
 }
@@ -39,16 +68,10 @@ export function parseRatesFromMarkdown(
 ): ParsedRate[] {
   const pairs: ParsedRate[] = [];
 
-  for (const { pair, re } of PAIR_PATTERNS) {
-    const fromMid = rateFromPairLine(markdown, pair);
-    let rate: number | null = fromMid;
-    if (rate == null) {
-      const m = markdown.match(re);
-      if (m?.[1]) {
-        const n = Number(m[1].replace(/,/g, ""));
-        if (Number.isFinite(n) && n > 0) rate = n;
-      }
-    }
+  for (const base of BASES) {
+    const pair = `${base}/NGN`;
+    const rate =
+      rateForBase(markdown, base) ?? rateFromPairLine(markdown, pair);
     if (rate != null) {
       pairs.push({
         pair,
@@ -61,7 +84,7 @@ export function parseRatesFromMarkdown(
   }
 
   // Fallback: if scrape succeeded but regex missed, keep a single USD row
-  // (1xxx range typical for USD/NGN — avoids matching years like 2026).
+  // (1xxx–2xxx range typical for USD/NGN — avoids matching years like 2026).
   if (pairs.length === 0) {
     const anyNum = markdown.match(/\b(1[0-9]{3}(?:\.\d+)?)\b/);
     if (anyNum?.[1]) {

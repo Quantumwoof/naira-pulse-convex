@@ -46,11 +46,12 @@ Without `NEXT_PUBLIC_CONVEX_URL`, the UI runs a **local DEMO preview** (same fix
 
 ## What it does
 
-1. **Refresh rates** triggers a Convex **action**.
-2. Action either:
-   - **DEMO_MODE (default):** loads Firecrawl-shaped markdown fixtures and stores snapshots, **honestly labeled DEMO**, or
-   - **Live:** scrapes a public FX page via **Firecrawl**, parses USD/GBP/EUR → NGN rates.
-3. Snapshots land in the Convex `pulses` table; the UI **reactively** shows latest cards + recent history.
+1. **Refresh rates** triggers a Convex **action** (`refreshRates`).
+2. Action modes (returned honestly as `live` | `demo` | `demo_fallback`):
+   - **Live:** when `DEMO_MODE=0` (or `forceLive: true`) **and** `FIRECRAWL_API_KEY` is set — Firecrawl scrape of public mid-market converter pages (e.g. Xe USD/GBP/EUR→NGN) → parse rates.
+   - **DEMO:** fixtures when no key / DEMO_MODE on (no live attempt).
+   - **DEMO fallback:** live attempted but scrape/parse failed → fixtures + status explaining Firecrawl failed.
+3. Snapshots land in the Convex `pulses` table; the UI **reactively** shows latest cards, corridor calculator, history sparkline, and recent feed.
 4. A short remittance tip is attached (OpenAI or canned DEMO tip).
 
 Rates are **indicative only** — not advice, not a live trading feed.
@@ -97,19 +98,19 @@ See **[docs/demo-script.md](./docs/demo-script.md)** for the full beat sheet.
 npm install && cp .env.example .env.local && npm run smoke && npm run dev
 ```
 
-1. Open http://localhost:3000 — amber **LOCAL DEMO** banner (no Convex URL).
-2. Click **Refresh rates** — fixtures jitter, tip rotates, history grows; labels stay `DEMO · …`.
-3. Point judges at eligibility table above (Convex + Firecrawl + `modernstack` tag).
+1. Open the live URL (or localhost) — **LIVE** / **DEMO** badge reflects `pulse.demoMode`.
+2. Click **Refresh rates** — cards + tip update; with keys + `DEMO_MODE=0` this is a live Firecrawl path.
+3. Try the **corridor calculator** (USD/EUR/GBP → NGN mid + bid/ask spread) and the **history sparkline**.
+4. Optional: **Try live scrape** (`forceLive: true`) for a one-shot live attempt even if DEMO_MODE=1; failures fall back to DEMO with a clear status.
 
 DEMO fixtures are **never** presented as live rates without labeling.
 
-## Residual blockers (this polish pass)
+## Residual blockers
 
 | Blocker | Impact | Workaround |
 |---------|--------|------------|
-| No Convex login on polish machine | No live `NEXT_PUBLIC_CONVEX_URL` / deployed reactive backend | Local DEMO preview UI works offline |
-| No Firecrawl / OpenAI keys used | Live scrape + AI tip paths unexercised end-to-end | `DEMO_MODE=1` fixtures + canned tips |
-| Public HTTPS + vibeapps submit | Live: https://naira-pulse-convex.vercel.app — video/submit next | Follow [DEPLOY.md](./DEPLOY.md) |
+| OpenAI tip optional | Without `OPENAI_API_KEY`, canned DEMO tips | Set key on Convex if desired |
+| Public HTTPS + vibeapps submit | Live: https://naira-pulse-convex.vercel.app | Follow [DEPLOY.md](./DEPLOY.md); tag `modernstack` |
 
 ## Scripts
 
@@ -135,7 +136,7 @@ convex/
   parseRates.ts   # shared markdown → rate parser
 src/
   app/            # Next.js App Router
-  components/     # PulseDashboard + ConvexProvider
+  components/     # PulseDashboard (corridor calculator + sparkline) + ConvexProvider
   lib/format.ts   # ₦ + Africa/Lagos time helpers
 scripts/smoke.mjs
 ```
@@ -149,11 +150,11 @@ See [`.env.example`](./.env.example). **Never commit secrets.**
 | Variable | Where | Notes |
 |----------|--------|-------|
 | `DEMO_MODE` | Convex env (+ local) | Default `1` |
-| `FIRECRAWL_API_KEY` | Convex env | Only if `DEMO_MODE=0` |
+| `FIRECRAWL_API_KEY` | Convex env | Required for live / `forceLive` |
 | `OPENAI_API_KEY` | Convex env | Optional tips |
 | `NEXT_PUBLIC_CONVEX_URL` | `.env.local` / Vercel | From `convex dev` / deploy |
 
-Firecrawl free signup: https://www.firecrawl.dev — hackathon code **MODERNSTACK** may grant credits (docs say ~20k). The DEMO path needs **no card**.
+Firecrawl free signup: https://www.firecrawl.dev — hackathon code **MODERNSTACK** may grant credits (docs say ~20k). DEMO fixtures work with zero keys.
 
 ---
 

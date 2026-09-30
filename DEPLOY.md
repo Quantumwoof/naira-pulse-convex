@@ -62,6 +62,9 @@ and set the same `DEMO_MODE` / API keys on the **production** Convex deployment.
 
 ## 3. Firecrawl (optional live scrape)
 
+Live path scrapes **Xe** USD/GBP/EUR→NGN converters (not CBN ASP — those often return empty HTML to scrapers). One Refresh uses **3** Firecrawl credits; free tier is ~10 req/min.
+
+
 1. Sign up free at https://www.firecrawl.dev (hackathon promo code **MODERNSTACK** may grant ~20k credits — no card required for the free / promo path).
 2. Create an API key.
 3. `npx convex env set FIRECRAWL_API_KEY <key>`

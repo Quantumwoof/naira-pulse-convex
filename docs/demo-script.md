@@ -5,18 +5,20 @@
 
 ## Beat 1 — Live stack (20s)
 
-Open the live URL. Point at **Naira Pulse · Convex**. Backend is Convex production (`majestic-pony-13`); frontend on Vercel. DEMO fixtures are labeled honestly when `DEMO_MODE=1`.
+Open the live URL. Point at **Naira Pulse · Convex**. Backend is Convex production; frontend on Vercel. Badge shows **LIVE** when the latest pulse came from Firecrawl, or **DEMO** / fallback when fixtures were used.
 
-## Beat 2 — Refresh (40s)
+## Beat 2 — Corridor calculator + sparkline (30s)
 
-Click **Refresh rates**. Cards update (EUR/GBP/USD vs NGN), tip rotates, history grows. Badge stays DEMO unless Firecrawl keys are configured.
+Use the **corridor calculator**: pick USD/EUR/GBP, leave amount at 500 (or change it), show indicative NGN receive from mid, plus bid/ask spread when present. Point at the **history sparkline** for the selected pair (pure SVG from recent pulses).
 
-## Beat 3 — Eligibility (20s)
+## Beat 3 — Refresh / live scrape (25s)
+
+Click **Refresh rates** (respects `DEMO_MODE` + key). With `DEMO_MODE=0` + `FIRECRAWL_API_KEY`, expect mode `live` (Firecrawl → public converter pages → parsed NGN mids). Optional: **Try live scrape** calls `refreshRates({ forceLive: true })` — still needs a key; on failure status says Firecrawl failed → DEMO fallback.
+
+## Beat 4 — Eligibility + close (15s)
 
 - **Convex** — `convex/schema.ts`, `pulses.ts`, `actions.ts`
-- **Firecrawl** — live scrape in `actions.refreshRates` when `DEMO_MODE=0` + key
+- **Firecrawl** — live scrape in `actions.refreshRates` when key present
 - Tag **`modernstack`** on vibeapps.dev
-
-## Beat 4 — Close (10s)
 
 Rates are **indicative only**. Deadline: **October 1, 2026 12:00 PM PT**.

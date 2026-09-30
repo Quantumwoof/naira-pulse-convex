@@ -9,6 +9,8 @@
  */
 
 import type * as actions from "../actions.js";
+import type * as fixtures from "../fixtures.js";
+import type * as parseRates from "../parseRates.js";
 import type * as pulses from "../pulses.js";
 
 import type {
@@ -19,6 +21,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
+  fixtures: typeof fixtures;
+  parseRates: typeof parseRates;
   pulses: typeof pulses;
 }>;
 

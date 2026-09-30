@@ -46,6 +46,24 @@ assert(
   "action uses shared parseRates module",
 );
 
+
+assert(
+  actionsSrc.includes("forceLive"),
+  "refreshRates accepts forceLive arg",
+);
+assert(
+  actionsSrc.includes('"live"') || actionsSrc.includes("'live'"),
+  "action returns live mode",
+);
+assert(
+  actionsSrc.includes("demo_fallback"),
+  "action returns demo_fallback on scrape failure",
+);
+assert(
+  actionsSrc.includes("shouldAttemptLive") || actionsSrc.includes("isDemoMode"),
+  "live-attempt gate present",
+);
+
 const pulsesSrc = readFileSync(join(root, "convex/pulses.ts"), "utf8");
 assert(pulsesSrc.includes("internalMutation"), "insertPulse is internalMutation");
 assert(pulsesSrc.includes("Invalid rate"), "rate validation present");
@@ -59,6 +77,15 @@ assert(schemaSrc.includes("by_capturedAt"), "by_capturedAt index present");
 
 const parseSrc = readFileSync(join(root, "convex/parseRates.ts"), "utf8");
 assert(parseSrc.includes("export function parseRatesFromMarkdown"), "parseRates export");
+assert(
+  parseSrc.includes("1\\.00") || parseSrc.includes("1.00"),
+  "parseRates handles Xe-style 1.00 BASE = NGN patterns",
+);
+assert(
+  /Xe|Wise|converter/i.test(parseSrc),
+  "parseRates docs mention converter-page sources",
+);
+
 
 const gitignore = readFileSync(join(root, ".gitignore"), "utf8");
 assert(gitignore.includes(".env.local"), ".gitignore covers .env.local");
@@ -174,9 +201,13 @@ void pathToFileURL;
 
 
 const dashSrc = readFileSync(join(root, "src/components/PulseDashboard.tsx"), "utf8");
-assert(dashSrc.includes("LOCAL DEMO") || dashSrc.includes("DEMO_MODE"), "UI has DEMO mode badge");
+assert(dashSrc.includes("LOCAL DEMO") || dashSrc.includes("DEMO") || dashSrc.includes('"DEMO"'), "UI has DEMO mode badge");
 assert(dashSrc.includes("not live"), "UI copy says fixtures are not live FX");
 assert(dashSrc.includes("formatNairaAmount"), "UI uses shared ₦ formatter");
+assert(dashSrc.includes("CorridorCalculator") || dashSrc.includes("corridor calculator"), "corridor calculator present");
+assert(dashSrc.includes("RateSparkline") || dashSrc.includes("sparkline"), "history sparkline present");
+assert(dashSrc.includes("Try live scrape") || dashSrc.includes("forceLive"), "Try live scrape / forceLive wired");
+assert(dashSrc.includes("LIVE") && dashSrc.includes("DEMO"), "LIVE vs DEMO badge labels present");
 
 const layoutSrc = readFileSync(join(root, "src/app/layout.tsx"), "utf8");
 assert(/DEMO fixtures|indicative/i.test(layoutSrc), "layout metadata honest (not claiming live-only)");
