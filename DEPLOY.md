@@ -1,20 +1,18 @@
 # Deploy guide — Naira Pulse Convex
 
-## Blockers on the scaffold / polish machine
+## Status
 
-This repo was built in a non-interactive agent environment:
+- **Live app:** https://naira-pulse-convex.vercel.app
+- **Convex prod:** `majestic-pony-13` (Firecrawl → Xe mid-market USD/GBP/EUR→NGN when `DEMO_MODE=0` + key)
+- **Remaining human steps:** short video demo + vibeapps.dev submit with tag `modernstack`
 
-1. **Convex login required** — `npx convex login` needs a browser + token from https://dashboard.convex.dev/auth. No Convex session was available during polish, so no live deployment URL was created here.
-2. **Vercel / production deploy** — needs Convex production URL + optional Firecrawl/OpenAI keys in Convex env and `NEXT_PUBLIC_CONVEX_URL` on Vercel.
-3. **Demo video + vibeapps submit** — human steps after a public HTTPS URL exists.
-
-Local DEMO UI works without those steps (see README).
+Local DEMO UI still works offline without keys (see README).
 
 ## Hackathon submit checklist
 
 1. Register on [Luma — Modern Stack Hackathon](https://luma.com/modernstackhackathonv1) (if not already).
 2. Deploy a **public HTTPS** URL (no localhost).
-3. Record a short **video demo** (Refresh rates → pulse cards → tip; less talk, more demo).
+3. Record a short **video demo** (Refresh rates → LIVE badge → corridor calculator + sparkline → tip; less talk, more demo).
 4. Submit on https://www.vibeapps.dev with tag **`modernstack`**, include GitHub repo URL.
 5. Deadline: **October 1, 2026 12:00 PM PT**.
 
@@ -58,14 +56,14 @@ Also run:
 npx convex deploy
 ```
 
-and set the same `DEMO_MODE` / API keys on the **production** Convex deployment. Prefer `DEMO_MODE=1` for judges without keys unless you have verified live Firecrawl.
+and set the same `DEMO_MODE` / API keys on the **production** Convex deployment. Live Firecrawl (Xe) is verified when `DEMO_MODE=0` + `FIRECRAWL_API_KEY`; otherwise leave `DEMO_MODE=1` so judges without keys still work.
 
 ## 3. Firecrawl (optional live scrape)
 
 Live path scrapes **Xe** USD/GBP/EUR→NGN converters (not CBN ASP — those often return empty HTML to scrapers). One Refresh uses **3** Firecrawl credits; free tier is ~10 req/min.
 
 
-1. Sign up free at https://www.firecrawl.dev (hackathon promo code **MODERNSTACK** may grant ~20k credits — no card required for the free / promo path).
+1. Sign up free at https://www.firecrawl.dev (hackathon promo code **MODERNSTACK** may grant ~20k credits).
 2. Create an API key.
 3. `npx convex env set FIRECRAWL_API_KEY <key>`
 4. `npx convex env set DEMO_MODE 0`

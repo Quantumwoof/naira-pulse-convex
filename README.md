@@ -13,7 +13,7 @@ Built for the [Convex Modern Stack Hackathon](https://www.convex.dev/hackathons/
 | Requirement | Status |
 |-------------|--------|
 | **Convex** backend (tables + queries/mutations + actions) | ✅ `convex/schema.ts`, `pulses.ts`, `actions.ts` |
-| **≥1 sponsor partner** — **Firecrawl** (primary) | ✅ `actions.refreshRates` → Firecrawl `/v1/scrape` when `DEMO_MODE=0` + `FIRECRAWL_API_KEY`; else DEMO fixtures (`convex/fixtures.ts`) |
+| **≥1 sponsor partner** — **Firecrawl** (primary) | ✅ `actions.refreshRates` → Firecrawl scrapes **Xe** USD/GBP/EUR→NGN when `DEMO_MODE=0` + `FIRECRAWL_API_KEY`; else DEMO fixtures (`convex/fixtures.ts`) |
 | Secondary — **OpenAI** tip (optional) | ✅ same action; canned tips if no `OPENAI_API_KEY` |
 | New app on/after Sep 16 2026 | ✅ created 2026-09-24 |
 | Public GitHub + runnable MVP | ✅ this repo; `npm run smoke` / `npm run build` |
@@ -32,12 +32,13 @@ Browser (Next.js) ──useQuery / useAction──► Convex
               │ DEMO_MODE=1 (default)         │ DEMO_MODE=0 + FIRECRAWL_API_KEY
               ▼                               ▼
          fixtures.ts                    Firecrawl /v1/scrape
-         + canned tip                   + parseRates.ts
+         + canned tip                   Xe USD/GBP/EUR→NGN
+                                       + parseRates.ts
               │                               │
               └──────── insertPulse ──────────┘
                     (internalMutation)
                          │
-                    pulses table  ──► reactive UI cards
+                    pulses table  ──► cards + corridor calculator + sparkline
 ```
 
 Without `NEXT_PUBLIC_CONVEX_URL`, the UI runs a **local DEMO preview** (same fixtures, in-browser only) so judges can click Refresh with zero keys.
@@ -170,5 +171,5 @@ Deadline: **October 1, 2026 12 PM PT**.
 
 - Next.js 16 (App Router) + TypeScript + Tailwind CSS v4
 - Convex (database, queries, internal mutations, Node actions)
-- Firecrawl (scrape → markdown) / DEMO fixtures
+- Firecrawl (Xe mid-market scrape → markdown) / DEMO fixtures
 - OpenAI (optional short tip) / canned tips

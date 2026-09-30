@@ -13,7 +13,7 @@ Use the **corridor calculator**: pick USD/EUR/GBP, leave amount at 500 (or chang
 
 ## Beat 3 — Refresh / live scrape (25s)
 
-Click **Refresh rates** (respects `DEMO_MODE` + key). With `DEMO_MODE=0` + `FIRECRAWL_API_KEY`, expect mode `live` (Firecrawl → public converter pages → parsed NGN mids). Optional: **Try live scrape** calls `refreshRates({ forceLive: true })` — still needs a key; on failure status says Firecrawl failed → DEMO fallback.
+Click **Refresh rates** (respects `DEMO_MODE` + key). With `DEMO_MODE=0` + `FIRECRAWL_API_KEY`, expect mode `live` (Firecrawl → **Xe** USD/GBP/EUR→NGN converters → parsed mids). Optional: **Try live scrape** calls `refreshRates({ forceLive: true })` — still needs a key; on failure status says Firecrawl failed → DEMO fallback.
 
 ## Beat 4 — Eligibility + close (15s)
 
