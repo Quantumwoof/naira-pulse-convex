@@ -109,7 +109,7 @@ DEMO fixtures are **never** presented as live rates without labeling.
 |---------|--------|------------|
 | No Convex login on polish machine | No live `NEXT_PUBLIC_CONVEX_URL` / deployed reactive backend | Local DEMO preview UI works offline |
 | No Firecrawl / OpenAI keys used | Live scrape + AI tip paths unexercised end-to-end | `DEMO_MODE=1` fixtures + canned tips |
-| Public HTTPS + vibeapps submit | Still need human deploy + video | Follow [DEPLOY.md](./DEPLOY.md) |
+| Public HTTPS + vibeapps submit | Live: https://naira-pulse-convex.vercel.app — video/submit next | Follow [DEPLOY.md](./DEPLOY.md) |
 
 ## Scripts
 

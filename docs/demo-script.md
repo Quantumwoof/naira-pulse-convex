@@ -1,38 +1,22 @@
 # Judge demo script (≈90 seconds)
 
-**Prep:** no Convex / Firecrawl / OpenAI login required.
+**Live:** https://naira-pulse-convex.vercel.app  
+**Repo:** https://github.com/Quantumwoof/naira-pulse-convex
 
-```bash
-git clone https://github.com/Quantumwoof/naira-pulse-convex.git
-cd naira-pulse-convex
-npm install
-cp .env.example .env.local   # DEMO_MODE=1, leave NEXT_PUBLIC_CONVEX_URL empty
-npm run smoke
-npm run dev
-```
+## Beat 1 — Live stack (20s)
 
-Open http://localhost:3000
+Open the live URL. Point at **Naira Pulse · Convex**. Backend is Convex production (`majestic-pony-13`); frontend on Vercel. DEMO fixtures are labeled honestly when `DEMO_MODE=1`.
 
-## Beat 1 — Honesty (15s)
+## Beat 2 — Refresh (40s)
 
-Point at the amber **LOCAL DEMO** / **Convex URL not configured** banner.
-Rates are **fixtures**, labeled `DEMO · …` — not live FX.
+Click **Refresh rates**. Cards update (EUR/GBP/USD vs NGN), tip rotates, history grows. Badge stays DEMO unless Firecrawl keys are configured.
 
-## Beat 2 — Refresh (30s)
-
-Click **Refresh rates**. Cards jitter slightly; tip rotates; history grows.
-Badge stays DEMO. Source labels stay honest.
-
-## Beat 3 — Eligibility (30s)
-
-Open README eligibility table:
+## Beat 3 — Eligibility (20s)
 
 - **Convex** — `convex/schema.ts`, `pulses.ts`, `actions.ts`
-- **Firecrawl** — live path in `actions.refreshRates` when `DEMO_MODE=0` + key; DEMO fixtures otherwise
-- Tag **`modernstack`** on vibeapps.dev after public HTTPS deploy (see `DEPLOY.md`)
+- **Firecrawl** — live scrape in `actions.refreshRates` when `DEMO_MODE=0` + key
+- Tag **`modernstack`** on vibeapps.dev
 
-## Beat 4 — Close (15s)
+## Beat 4 — Close (10s)
 
-Rates are **indicative only**. Full reactive stack needs `npx convex login` + `npx convex dev` (not done in this offline pass).
-
-Deadline: **October 1, 2026 12:00 PM PT**.
+Rates are **indicative only**. Deadline: **October 1, 2026 12:00 PM PT**.
